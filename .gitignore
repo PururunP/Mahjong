@@ -1,0 +1,17 @@
+/.vscode
+/Library
+/Logs
+/obj
+/packages
+/ProjectSettings
+/Temp
+/UserSettings
+/Assembly-CSharp.csproj
+/Mahjong.sln
+
+/Assets/*.meta
+/Assets/Image
+/Assets/Mat
+/Assets/Object
+/Assets/Scenes
+/Assets/Script/*.meta
