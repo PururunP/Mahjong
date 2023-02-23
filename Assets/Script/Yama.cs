@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static Pai;
 
 // 山ゲームオブジェクト操作
 public class Yama : MonoBehaviour
@@ -10,11 +9,18 @@ public class Yama : MonoBehaviour
     private List<GameObject> pais;
 
     // 乱数クラス
-    private System.Random random = new System.Random();
+    private System.Random random;
 
-    void Start()
+    void Awake()
     {
-        /* 牌ゲームオブジェクトをメンバ変数に加える */
+        /* 初期化 */
+        this.pais = new List<GameObject>();
+        this.random = new System.Random();
+    }
+
+    // 牌ゲームオブジェクトをメンバ変数に加える
+    public void setPaiGameObjectToMemberVariable()
+    {
         // 山ゲームオブジェクト直下のオブジェクト参照
         Transform yamaChild = this.gameObject.GetComponentInChildren<Transform>();
 
@@ -25,21 +31,15 @@ public class Yama : MonoBehaviour
         }
     }
 
-    void Update() { }
-
     // 山からツモる
     public GameObject drawPai()
     {
-        // 乱数で取得する牌の数値取得
-        int randNumer = random.Next(0, this.pais.Count);
-
         // 乱数番目の牌ゲームオブジェクト取得
-        GameObject paiGO = this.pais[randNumer];
+        GameObject paiGameObj = this.pais[this.random.Next(0, this.pais.Count)];
 
-        // 山から乱数番目の牌ゲームオブジェクトを排除
-        this.pais.RemoveAt(randNumer);
-
-        return paiGO;
+        // 山からツモった牌ゲームオブジェクトを排除
+        this.pais.Remove(paiGameObj);
+        return paiGameObj;
     }
 
     // 特定の牌を指定してツモる
@@ -48,19 +48,23 @@ public class Yama : MonoBehaviour
         // 条件にあう牌を探索
         foreach (GameObject paiGameObj in this.pais)
         {
-            // 山ゲームオブジェクトのPaiスクリプト取得
-            Pai paiScipt = paiGameObj.GetComponent<Pai>();
+            // 山ゲームオブジェクトのPaiゲームオブジェクトのPaiスクリプト取得
+            Pai paiScipt = paiGameObj.GetComponent<PaiGO>().Pai;
 
             // 各値と一致するかチェック
             if (pai.PaiKind == paiScipt.PaiKind)
             {
-                if (pai.PaiNumber == pai.PaiNumber)
+                if (pai.PaiCharacters == paiScipt.PaiCharacters)
                 {
-                    if (pai.IsRed == paiScipt.IsRed)
+                    if (pai.PaiNumber == paiScipt.PaiNumber)
                     {
-                        // すべて一致するなら山から除外してゲームオブジェクトを返却
-                        this.pais.Remove(paiGameObj);
-                        return paiGameObj;
+                        if (pai.IsRed == paiScipt.IsRed)
+                        {
+                            // すべて一致するなら山から除外してゲームオブジェクトを返却
+                            this.pais.Remove(paiGameObj);
+                            //Debug.Log("残り牌：" + this.pais.Count);
+                            return paiGameObj;
+                        }
                     }
                 }
             }

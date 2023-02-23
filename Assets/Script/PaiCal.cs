@@ -4,10 +4,11 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // 牌計算
-public class PaiCal : MonoBehaviour
+public class PaiCal
 {
     // 基本形を符計算
     public static int allPaiSetCalPoint(List<PaiSet> paiSetList, PaiPair paiPair,
+        bool isSelfDrawWin, bool isConcealedRon,
         PaiStatus.PAICHARACTERS ownWindPaiCharacters,
         PaiStatus.PAICHARACTERS roundWindPaiCharacters)
     {
@@ -22,7 +23,7 @@ public class PaiCal : MonoBehaviour
         // 頭が役牌かどうか
         bool isValueTiles = false;
         // 頭のPaiスクリプトを取得
-        Pai pai = paiPair.Pai1.GetComponent<Pai>();
+        Pai pai = paiPair.Pai1.GetComponent<PaiGO>().Pai;
         if (pai.PaiCharacters == ownWindPaiCharacters ||
             pai.PaiCharacters == roundWindPaiCharacters)
         {
@@ -31,6 +32,22 @@ public class PaiCal : MonoBehaviour
 
         // 頭を符計算して加算
         points += calPointOfPaiPair(paiPair, isValueTiles);
+
+        // 門前ロンなら符+10
+        if (isConcealedRon)
+        {
+            points += 10;
+        }
+        // ツモ和了は符+2
+        // 平和ツモはスルー(20符の場合)
+        else if (isSelfDrawWin && points != 20)
+        {
+            points += 2;
+        }
+
+        // 切り上げ処理
+        double d = points / 10;
+        points = (int)Math.Ceiling(d) * 10;
 
         return points;
     }
@@ -42,7 +59,7 @@ public class PaiCal : MonoBehaviour
         int points = 0;
 
         // 牌を1つ取得
-        Pai pai = paiSet.Pai1.GetComponent<Pai>();
+        Pai pai = paiSet.Pai1.GetComponent<PaiGO>().Pai;
 
         /* 么九牌かどうかを判定 */
         // フラグ宣言
@@ -111,16 +128,16 @@ public class PaiCal : MonoBehaviour
             if (isTerminals)
             {
                 // 面子の牌3つの数字を抽出
-                Pai pai1 = paiSet.Pai1.GetComponent<Pai>();
-                Pai pai2 = paiSet.Pai2.GetComponent<Pai>();
-                Pai pai3 = paiSet.Pai3.GetComponent<Pai>();
+                Pai pai1 = paiSet.Pai1.GetComponent<PaiGO>().Pai;
+                Pai pai2 = paiSet.Pai2.GetComponent<PaiGO>().Pai;
+                Pai pai3 = paiSet.Pai3.GetComponent<PaiGO>().Pai;
                 int[] paiNumberArray = { pai1.PaiNumber, pai2.PaiNumber, pai3.PaiNumber };
 
                 // 配列を昇順にソート
                 Array.Sort(paiNumberArray);
 
                 // 和了牌の数字取得
-                int winningPaiNumber = paiSet.WinningPai.GetComponent<Pai>().PaiNumber;
+                int winningPaiNumber = paiSet.WinningPai.GetComponent<PaiGO>().Pai.PaiNumber;
 
                 // 和了牌が配列の何番目かを検査
                 for (int i = 0; i < paiNumberArray.Length; i++)
@@ -169,9 +186,6 @@ public class PaiCal : MonoBehaviour
         // 符宣言
         int points = 0;
 
-        // 牌を1つ取得
-        Pai pai = paiPair.Pai1.GetComponent<Pai>();
-
         // 牌が役牌かどうかをチェック
         if (isValueTiles)
         {
@@ -191,7 +205,7 @@ public class PaiCal : MonoBehaviour
     // 点数計算
     public static MahjongScoreStatus calScore(int points, int doubles)
     {
-        // 翻数で分岐処理 // TODO 点数計算を追加
+        // 翻数で分岐処理
         if (doubles == 1)
         {
             switch (points)
@@ -207,25 +221,91 @@ public class PaiCal : MonoBehaviour
                 case 70:
                     return new MahjongScoreStatus(2300, 3400, 600, 1200);
                 case 80:
-                    return new MahjongScoreStatus(2600, 0, 700, 1300);
+                    return new MahjongScoreStatus(2600, 3900, 700, 1300);
                 case 90:
-                    return new MahjongScoreStatus(2900, 0, 800, 1500);
+                    return new MahjongScoreStatus(2900, 4400, 800, 1500);
                 case 100:
-                    return new MahjongScoreStatus(3200, 0, 800, 1600);
+                    return new MahjongScoreStatus(3200, 4800, 800, 1600);
                 case 110:
-                    return new MahjongScoreStatus(2600, 0, 900, 1800);
-                case 120:
-                    return new MahjongScoreStatus(4000, 5800, 1000, 2000);
+                    return new MahjongScoreStatus(3600, 5300, 900, 1800);
                 default:
                     break;
             }
         }
         else if (doubles == 2)
-        { }
+        {
+            switch (points)
+            {
+                case 20:
+                    return new MahjongScoreStatus(0, 0, 400, 700);
+                case 25:
+                    return new MahjongScoreStatus(1600, 2400, 400, 800);
+                case 30:
+                    return new MahjongScoreStatus(2000, 2900, 500, 1000);
+                case 40:
+                    return new MahjongScoreStatus(2600, 3900, 700, 1300);
+                case 50:
+                    return new MahjongScoreStatus(3200, 4800, 800, 1600);
+                case 60:
+                    return new MahjongScoreStatus(3900, 5800, 1000, 2000);
+                case 70:
+                    return new MahjongScoreStatus(4500, 6800, 1200, 2300);
+                case 80:
+                    return new MahjongScoreStatus(5200, 7700, 1300, 2600);
+                case 90:
+                    return new MahjongScoreStatus(5800, 8700, 1500, 2900);
+                case 100:
+                    return new MahjongScoreStatus(6400, 9600, 1600, 3200);
+                case 110:
+                    return new MahjongScoreStatus(7100, 9600, 1800, 3600);
+                default:
+                    break;
+            }
+        }
         else if (doubles == 3)
-        { }
+        {
+            switch (points)
+            {
+                case 20:
+                    return new MahjongScoreStatus(0, 0, 700, 1300);
+                case 25:
+                    return new MahjongScoreStatus(3200, 4800, 800, 1600);
+                case 30:
+                    return new MahjongScoreStatus(3900, 5800, 1000, 2000);
+                case 40:
+                    return new MahjongScoreStatus(5200, 7700, 1300, 2600);
+                case 50:
+                    return new MahjongScoreStatus(6400, 9600, 1600, 3200);
+                case 60:
+                    return new MahjongScoreStatus(7700, 11600, 2000, 3900);
+                default:
+                    if (points >= 70)
+                    {
+                        // 満貫確定
+                        return new MahjongScoreStatus(8000, 12000, 2000, 4000);
+                    }
+                    break;
+            }
+        }
         else if (doubles == 4)
-        { }
+        {
+            switch (points)
+            {
+                case 20:
+                    return new MahjongScoreStatus(0, 0, 1300, 2600);
+                case 25:
+                    return new MahjongScoreStatus(6400, 9600, 1600, 3200);
+                case 30:
+                    return new MahjongScoreStatus(7700, 11600, 2000, 3900);
+                default:
+                    if (points >= 40)
+                    {
+                        // 満貫確定
+                        return new MahjongScoreStatus(8000, 12000, 2000, 4000);
+                    }
+                    break;
+            }
+        }
         else if (doubles == 5)
         {
             // 満貫確定
@@ -251,7 +331,7 @@ public class PaiCal : MonoBehaviour
             // 役満確定
             return new MahjongScoreStatus(32000, 48000, 8000, 16000);
         }
-        // 該当の点数がなかった場合はnullを返却
-        return null;
+        // 該当の点数がなかった場合は初期化したオブジェクトを返却
+        return new MahjongScoreStatus();
     }
 }

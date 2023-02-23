@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // 牌の量ステータス(Json化するかも)
-public class PaiAmountStatus : MonoBehaviour
+public class PaiAmountStatus
 {
     /* 各牌の数 */
     public int 東 = 4;

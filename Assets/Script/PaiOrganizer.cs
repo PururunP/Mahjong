@@ -7,10 +7,19 @@ public class PaiOrganizer : MonoBehaviour
 {
     // 山ゲームオブジェクト
     [SerializeField]
-    private GameObject yamaGameObject = null;
+    private GameObject yamaGameObject;
 
     // 乱数
-    private System.Random random = new System.Random();
+    private System.Random random;
+
+    // ログ出力用文字列
+    public string log = "";
+
+    void Awake()
+    {
+        /* 初期化 */
+        this.random = new System.Random();
+    }
 
     // 面子を揃える
     public PaiSet alignPaiSet()
@@ -24,18 +33,23 @@ public class PaiOrganizer : MonoBehaviour
             GameObject randPai = yamaScript.drawPai();
 
             // Paiスクリプト抽出
-            Pai paiSctipt = randPai.GetComponent<Pai>();
+            Pai paiScript = randPai.GetComponent<PaiGO>().Pai;
+
+            log += "面子ランダムツモ：" + randPai.name + "\n"; ;
 
             /* 牌の種類により分岐処理 */
             // 字牌かどうか
-            if (paiSctipt.PaiKind == PaiStatus.PAIKIND.字牌)
+            if (paiScript.PaiKind == PaiStatus.PAIKIND.字牌)
             {
                 // 同じ牌をツモ
-                Pai pai = new Pai(paiSctipt.PaiKind, paiSctipt.PaiCharacters);
+                Pai pai = new Pai(paiScript.PaiKind, paiScript.PaiCharacters);
 
                 GameObject paiGameObj1 = yamaScript.drawPai(pai);
                 GameObject paiGameObj2 = yamaScript.drawPai(pai);
                 GameObject paiGameObj3 = yamaScript.drawPai(pai);
+                log += "ツモ1：" + paiGameObj1.name + "\n";
+                log += "ツモ2：" + paiGameObj2.name + "\n";
+                log += "ツモ3：" + paiGameObj3.name + "\n";
 
                 // nullチェック
                 if (paiGameObj1 == null || paiGameObj2 == null)
@@ -102,15 +116,15 @@ public class PaiOrganizer : MonoBehaviour
                     // 么九牌の場合は2,3もしくは8,7の同種牌をツモ
                     // それ以外はn-1,n+1の同種牌をツモ
                     Pai pai1, pai2;
-                    if (paiSctipt.PaiNumber == 1)
+                    if (paiScript.PaiNumber == 1)
                     {
-                        pai1 = new Pai(paiSctipt.PaiKind, 2, false);
-                        pai2 = new Pai(paiSctipt.PaiKind, 3, false);
+                        pai1 = new Pai(paiScript.PaiKind, 2, false);
+                        pai2 = new Pai(paiScript.PaiKind, 3, false);
                     }
-                    else if (paiSctipt.PaiNumber == 9)
+                    else if (paiScript.PaiNumber == 9)
                     {
-                        pai1 = new Pai(paiSctipt.PaiKind, 8, false);
-                        pai2 = new Pai(paiSctipt.PaiKind, 7, false);
+                        pai1 = new Pai(paiScript.PaiKind, 8, false);
+                        pai2 = new Pai(paiScript.PaiKind, 7, false);
                     }
                     else
                     {
@@ -118,20 +132,22 @@ public class PaiOrganizer : MonoBehaviour
                         // 1/4の確率で赤くする
                         bool isRed1 = false;
                         bool isRed2 = false;
-                        if ((paiSctipt.PaiNumber - 1) == 5 && this.random.Next(0, 4) == 9)
+                        if ((paiScript.PaiNumber - 1) == 5 && this.random.Next(0, 4) == 9)
                         {
                             isRed1 = true;
                         }
-                        if ((paiSctipt.PaiNumber + 1) == 5 && this.random.Next(0, 4) == 0)
+                        if ((paiScript.PaiNumber + 1) == 5 && this.random.Next(0, 4) == 0)
                         {
                             isRed2 = true;
                         }
-                        pai1 = new Pai(paiSctipt.PaiKind, paiSctipt.PaiNumber - 1, isRed1);
-                        pai2 = new Pai(paiSctipt.PaiKind, paiSctipt.PaiNumber + 1, isRed2);
+                        pai1 = new Pai(paiScript.PaiKind, paiScript.PaiNumber - 1, isRed1);
+                        pai2 = new Pai(paiScript.PaiKind, paiScript.PaiNumber + 1, isRed2);
                     }
 
                     GameObject paiGameObj1 = yamaScript.drawPai(pai1);
                     GameObject paiGameObj2 = yamaScript.drawPai(pai2);
+                    log += "ツモ1：" + paiGameObj1.name + "\n";
+                    log += "ツモ2：" + paiGameObj2.name + "\n";
 
                     // nullチェック
                     if (paiGameObj1 == null || paiGameObj2 == null)
@@ -165,11 +181,14 @@ public class PaiOrganizer : MonoBehaviour
                 {
                     /* 刻子か槓子を構成 */
                     // 同数字の同種牌をツモ
-                    Pai pai = new Pai(paiSctipt.PaiKind, paiSctipt.PaiNumber, false);
+                    Pai pai = new Pai(paiScript.PaiKind, paiScript.PaiNumber, false);
 
                     GameObject paiGameObj1 = yamaScript.drawPai(pai);
                     GameObject paiGameObj2 = yamaScript.drawPai(pai);
                     GameObject paiGameObj3 = yamaScript.drawPai(pai);
+                    log += "ツモ1：" + paiGameObj1.name + "\n";
+                    log += "ツモ2：" + paiGameObj2.name + "\n";
+                    log += "ツモ3：" + paiGameObj3.name + "\n";
 
                     // nullチェック
                     if (paiGameObj1 == null || paiGameObj2 == null)
@@ -240,23 +259,17 @@ public class PaiOrganizer : MonoBehaviour
 
         while (true)
         {
-            // 面子の基準となる牌をランダムツモ
+            // 対子の基準となる牌をランダムツモ
             GameObject randPai = yamaScript.drawPai();
 
             // Paiスクリプト抽出
-            Pai paiScript = randPai.GetComponent<Pai>();
+            Pai paiScript = randPai.GetComponent<PaiGO>().Pai;
 
-            // 同牌をツモ
-            Pai pai = null;
-            if (paiScript.PaiKind == PaiStatus.PAIKIND.字牌)
-            {
-                pai = new Pai(paiScript.PaiKind, paiScript.PaiCharacters);
-            }
-            else
-            {
-                pai = new Pai(paiScript.PaiKind, paiScript.PaiNumber, false);
-            }
+            log += "対子ランダムツモ：" + randPai.name + "\n";
 
+            // 同牌をツモ(赤牌は普通の牌に)
+            Pai pai = new Pai(paiScript.PaiKind, paiScript.PaiCharacters,
+                paiScript.PaiNumber, false);
             GameObject paiGameObj = yamaScript.drawPai(pai);
 
             // nullチェック
@@ -269,9 +282,96 @@ public class PaiOrganizer : MonoBehaviour
             }
             else
             {
+                log += "ツモ：" + paiGameObj.name + "\n";
                 // 対子オブジェクト返却
                 return new PaiPair(pai1: randPai, pai2: paiGameObj);
             }
+        }
+    }
+
+    // 面子オブジェクトリストを山に戻す
+    public void addPaiSetListToYama(List<PaiSet> paiSetList)
+    {
+        if (paiSetList.Count >= 1)
+        {
+            foreach (PaiSet paiSet in paiSetList)
+            {
+                addPaiSetToYama(paiSet);
+            }
+        }
+    }
+
+    // 面子オブジェクトを山に戻す
+    public void addPaiSetToYama(PaiSet paiSet)
+    {
+        // 山スクリプト取得
+        Yama yama = this.yamaGameObject.GetComponent<Yama>();
+        yama.addPai(paiSet.Pai1);
+        yama.addPai(paiSet.Pai2);
+        yama.addPai(paiSet.Pai3);
+        yama.addPai(paiSet.Pai4);
+
+        // 牌があるなら座標を初期位置に戻す
+        if (paiSet.Pai1 != null)
+        {
+            paiSet.Pai1.transform.position = paiSet.Pai1.gameObject.
+                GetComponent<PaiGO>().InitVec;
+            paiSet.Pai1.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+        }
+        if (paiSet.Pai2 != null)
+        {
+            paiSet.Pai2.transform.position = paiSet.Pai2.gameObject.
+                GetComponent<PaiGO>().InitVec;
+            paiSet.Pai2.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+        }
+        if (paiSet.Pai3 != null)
+        {
+            paiSet.Pai3.transform.position = paiSet.Pai3.gameObject.
+                GetComponent<PaiGO>().InitVec;
+            paiSet.Pai3.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+        }
+        if (paiSet.Pai4 != null)
+        {
+            paiSet.Pai4.transform.position = paiSet.Pai4.gameObject.
+                GetComponent<PaiGO>().InitVec;
+            paiSet.Pai4.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+        }
+    }
+
+    // 対子オブジェクトリストを山に戻す
+    public void addPaiPairListToYama(List<PaiPair> paiPairList)
+    {
+        if (paiPairList.Count >= 1)
+        {
+            // 山スクリプト取得
+            Yama yama = this.yamaGameObject.GetComponent<Yama>();
+            foreach (PaiPair paiPair in paiPairList)
+            {
+                addPaiPairToYama(paiPair);
+            }
+        }
+    }
+
+    // 対子オブジェクトを山に戻す
+    public void addPaiPairToYama(PaiPair paiPair)
+    {
+        // 山スクリプト取得
+        Yama yama = this.yamaGameObject.GetComponent<Yama>();
+        yama.addPai(paiPair.Pai1);
+        yama.addPai(paiPair.Pai2);
+
+        // 牌があるなら座標を初期位置に戻す
+        if (paiPair.Pai1 != null)
+        {
+            paiPair.Pai1.transform.position = paiPair.Pai1.gameObject.
+                GetComponent<PaiGO>().InitVec;
+            paiPair.Pai1.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+        }
+        if (paiPair.Pai2 != null)
+        {
+            paiPair.Pai2.transform.position = paiPair.Pai2.gameObject.
+                GetComponent<PaiGO>().InitVec;
+            paiPair.Pai2.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
         }
     }
 
@@ -286,114 +386,121 @@ public class PaiOrganizer : MonoBehaviour
                 {
                     /* i番目とj番目を比較し、順番を入れ替える */
                     // Paiスクリプト取得
-                    Pai paiSctipt1 = paiSetList[i].Pai1.GetComponent<Pai>();
-                    Pai paiSctipt2 = paiSetList[j].Pai1.GetComponent<Pai>();
-
-                    if (paiSctipt1.PaiKind == PaiStatus.PAIKIND.萬子)
+                    Pai paiScript1 = paiSetList[i].Pai1.GetComponent<PaiGO>().Pai;
+                    Pai paiScript2 = paiSetList[j].Pai1.GetComponent<PaiGO>().Pai;// 萬子の場合
+                    if (paiScript1.PaiKind == PaiStatus.PAIKIND.萬子)
                     {
                         // 同種牌の場合
-                        if (paiSctipt2.PaiKind == PaiStatus.PAIKIND.萬子)
+                        if (paiScript2.PaiKind == PaiStatus.PAIKIND.萬子)
                         {
                             // 数字を比較
-                            if (paiSctipt1.PaiNumber > paiSctipt2.PaiNumber)
+                            if (paiScript1.PaiNumber > paiScript2.PaiNumber)
                             {
                                 // iとjを入れ替え
                                 (paiSetList[i], paiSetList[j]) = (paiSetList[j], paiSetList[i]);
                             }
                         }
                     }
-                    else if (paiSctipt1.PaiKind == PaiStatus.PAIKIND.筒子)
+                    // 筒子の場合
+                    else if (paiScript1.PaiKind == PaiStatus.PAIKIND.筒子)
                     {
-                        // 萬子を探索
-                        if (paiSctipt2.PaiKind == PaiStatus.PAIKIND.萬子)
+                        // 同種牌の場合
+                        if (paiScript2.PaiKind == PaiStatus.PAIKIND.筒子)
+                        {
+                            // 数字を比較
+                            if (paiScript1.PaiNumber > paiScript2.PaiNumber)
+                            {
+                                // iとjを入れ替え
+                                (paiSetList[i], paiSetList[j]) = (paiSetList[j], paiSetList[i]);
+                            }
+                        }
+                        // 入れ替える対象の牌(萬子)の場合
+                        else if (paiScript2.PaiKind == PaiStatus.PAIKIND.萬子)
                         {
                             // iとjを入れ替え
                             (paiSetList[i], paiSetList[j]) = (paiSetList[j], paiSetList[i]);
                         }
+                    }
+                    // 索子の場合
+                    else if (paiScript1.PaiKind == PaiStatus.PAIKIND.索子)
+                    {
                         // 同種牌の場合
-                        else
+                        if (paiScript2.PaiKind == PaiStatus.PAIKIND.索子)
                         {
                             // 数字を比較
-                            if (paiSctipt1.PaiNumber > paiSctipt2.PaiNumber)
+                            if (paiScript1.PaiNumber > paiScript2.PaiNumber)
                             {
                                 // iとjを入れ替え
                                 (paiSetList[i], paiSetList[j]) = (paiSetList[j], paiSetList[i]);
                             }
                         }
-                    }
-                    else if (paiSctipt1.PaiKind == PaiStatus.PAIKIND.索子)
-                    {
-                        // 萬子筒子を探索
-                        if (paiSctipt2.PaiKind == PaiStatus.PAIKIND.萬子 ||
-                            paiSctipt2.PaiKind == PaiStatus.PAIKIND.筒子)
+                        // 入れ替える対象の牌(萬子・筒子)の場合
+                        else if (paiScript2.PaiKind == PaiStatus.PAIKIND.萬子 ||
+                            paiScript2.PaiKind == PaiStatus.PAIKIND.筒子)
                         {
                             // iとjを入れ替え
                             (paiSetList[i], paiSetList[j]) = (paiSetList[j], paiSetList[i]);
                         }
-                        // 同種牌の場合
-                        else
-                        {
-                            // 数字を比較
-                            if (paiSctipt1.PaiNumber > paiSctipt2.PaiNumber)
-                            {
-                                // iとjを入れ替え
-                                (paiSetList[i], paiSetList[j]) = (paiSetList[j], paiSetList[i]);
-                            }
-                        }
                     }
-                    else if (paiSctipt1.PaiKind == PaiStatus.PAIKIND.字牌)
+                    // 字牌の場合
+                    else if (paiScript1.PaiKind == PaiStatus.PAIKIND.字牌)
                     {
                         // 字牌かどうか
-                        if (paiSctipt2.PaiKind == PaiStatus.PAIKIND.字牌)
+                        if (paiScript2.PaiKind == PaiStatus.PAIKIND.字牌)
                         {
                             // 字牌の順番に入れ替え
-                            switch (paiSctipt1.PaiCharacters)
+                            switch (paiScript1.PaiCharacters)
                             {
                                 case PaiStatus.PAICHARACTERS.東:
                                     // 何もしない
                                     break;
                                 case PaiStatus.PAICHARACTERS.南:
                                     // 東なら入れ替え
-                                    if (paiSctipt2.PaiCharacters == PaiStatus.PAICHARACTERS.東)
+                                    if (paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.東)
                                     {
+                                        // iとjを入れ替え
                                         (paiSetList[i], paiSetList[j]) = (paiSetList[j], paiSetList[i]);
                                     }
                                     break;
                                 case PaiStatus.PAICHARACTERS.西:
                                     // 東南なら入れ替え
-                                    if (paiSctipt2.PaiCharacters == PaiStatus.PAICHARACTERS.東 ||
-                                        paiSctipt2.PaiCharacters == PaiStatus.PAICHARACTERS.南)
+                                    if (paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.東 ||
+                                        paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.南)
                                     {
+                                        // iとjを入れ替え
                                         (paiSetList[i], paiSetList[j]) = (paiSetList[j], paiSetList[i]);
                                     }
                                     break;
                                 case PaiStatus.PAICHARACTERS.北:
                                     // 東南西なら入れ替え
-                                    if (paiSctipt2.PaiCharacters == PaiStatus.PAICHARACTERS.東 ||
-                                        paiSctipt2.PaiCharacters == PaiStatus.PAICHARACTERS.南 ||
-                                        paiSctipt2.PaiCharacters == PaiStatus.PAICHARACTERS.西)
+                                    if (paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.東 ||
+                                        paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.南 ||
+                                        paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.西)
                                     {
+                                        // iとjを入れ替え
                                         (paiSetList[i], paiSetList[j]) = (paiSetList[j], paiSetList[i]);
                                     }
                                     break;
                                 case PaiStatus.PAICHARACTERS.白:
                                     // 東南西北なら入れ替え
-                                    if (paiSctipt2.PaiCharacters == PaiStatus.PAICHARACTERS.東 ||
-                                        paiSctipt2.PaiCharacters == PaiStatus.PAICHARACTERS.南 ||
-                                        paiSctipt2.PaiCharacters == PaiStatus.PAICHARACTERS.西 ||
-                                        paiSctipt2.PaiCharacters == PaiStatus.PAICHARACTERS.北)
+                                    if (paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.東 ||
+                                        paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.南 ||
+                                        paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.西 ||
+                                        paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.北)
                                     {
+                                        // iとjを入れ替え
                                         (paiSetList[i], paiSetList[j]) = (paiSetList[j], paiSetList[i]);
                                     }
                                     break;
                                 case PaiStatus.PAICHARACTERS.發:
                                     // 東南西北白なら入れ替え
-                                    if (paiSctipt2.PaiCharacters == PaiStatus.PAICHARACTERS.東 ||
-                                        paiSctipt2.PaiCharacters == PaiStatus.PAICHARACTERS.南 ||
-                                        paiSctipt2.PaiCharacters == PaiStatus.PAICHARACTERS.西 ||
-                                        paiSctipt2.PaiCharacters == PaiStatus.PAICHARACTERS.北 ||
-                                        paiSctipt2.PaiCharacters == PaiStatus.PAICHARACTERS.白)
+                                    if (paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.東 ||
+                                        paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.南 ||
+                                        paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.西 ||
+                                        paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.北 ||
+                                        paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.白)
                                     {
+                                        // iとjを入れ替え
                                         (paiSetList[i], paiSetList[j]) = (paiSetList[j], paiSetList[i]);
                                     }
                                     break;
@@ -428,114 +535,123 @@ public class PaiOrganizer : MonoBehaviour
                 {
                     /* i番目とj番目を比較し、順番を入れ替える */
                     // Paiスクリプト取得
-                    Pai paiSctipt1 = paiPairList[i].Pai1.GetComponent<Pai>();
-                    Pai paiSctipt2 = paiPairList[j].Pai1.GetComponent<Pai>();
+                    Pai paiScript1 = paiPairList[i].Pai1.GetComponent<PaiGO>().Pai;
+                    Pai paiScript2 = paiPairList[j].Pai1.GetComponent<PaiGO>().Pai;
 
-                    if (paiSctipt1.PaiKind == PaiStatus.PAIKIND.萬子)
+                    // 萬子の場合
+                    if (paiScript1.PaiKind == PaiStatus.PAIKIND.萬子)
                     {
                         // 同種牌の場合
-                        if (paiSctipt2.PaiKind == PaiStatus.PAIKIND.萬子)
+                        if (paiScript2.PaiKind == PaiStatus.PAIKIND.萬子)
                         {
                             // 数字を比較
-                            if (paiSctipt1.PaiNumber > paiSctipt2.PaiNumber)
+                            if (paiScript1.PaiNumber > paiScript2.PaiNumber)
                             {
                                 // iとjを入れ替え
                                 (paiPairList[i], paiPairList[j]) = (paiPairList[j], paiPairList[i]);
                             }
                         }
                     }
-                    else if (paiSctipt1.PaiKind == PaiStatus.PAIKIND.筒子)
+                    // 筒子の場合
+                    else if (paiScript1.PaiKind == PaiStatus.PAIKIND.筒子)
                     {
-                        // 萬子を探索
-                        if (paiSctipt2.PaiKind == PaiStatus.PAIKIND.萬子)
+                        // 同種牌の場合
+                        if (paiScript2.PaiKind == PaiStatus.PAIKIND.筒子)
+                        {
+                            // 数字を比較
+                            if (paiScript1.PaiNumber > paiScript2.PaiNumber)
+                            {
+                                // iとjを入れ替え
+                                (paiPairList[i], paiPairList[j]) = (paiPairList[j], paiPairList[i]);
+                            }
+                        }
+                        // 入れ替える対象の牌(萬子)の場合
+                        else if (paiScript2.PaiKind == PaiStatus.PAIKIND.萬子)
                         {
                             // iとjを入れ替え
                             (paiPairList[i], paiPairList[j]) = (paiPairList[j], paiPairList[i]);
                         }
+                    }
+                    // 索子の場合
+                    else if (paiScript1.PaiKind == PaiStatus.PAIKIND.索子)
+                    {
                         // 同種牌の場合
-                        else
+                        if (paiScript2.PaiKind == PaiStatus.PAIKIND.索子)
                         {
                             // 数字を比較
-                            if (paiSctipt1.PaiNumber > paiSctipt2.PaiNumber)
+                            if (paiScript1.PaiNumber > paiScript2.PaiNumber)
                             {
                                 // iとjを入れ替え
                                 (paiPairList[i], paiPairList[j]) = (paiPairList[j], paiPairList[i]);
                             }
                         }
-                    }
-                    else if (paiSctipt1.PaiKind == PaiStatus.PAIKIND.索子)
-                    {
-                        // 萬子筒子を探索
-                        if (paiSctipt2.PaiKind == PaiStatus.PAIKIND.萬子 ||
-                            paiSctipt2.PaiKind == PaiStatus.PAIKIND.筒子)
+                        // 入れ替える対象の牌(萬子・筒子)の場合
+                        else if (paiScript2.PaiKind == PaiStatus.PAIKIND.萬子 ||
+                            paiScript2.PaiKind == PaiStatus.PAIKIND.筒子)
                         {
                             // iとjを入れ替え
                             (paiPairList[i], paiPairList[j]) = (paiPairList[j], paiPairList[i]);
                         }
-                        // 同種牌の場合
-                        else
-                        {
-                            // 数字を比較
-                            if (paiSctipt1.PaiNumber > paiSctipt2.PaiNumber)
-                            {
-                                // iとjを入れ替え
-                                (paiPairList[i], paiPairList[j]) = (paiPairList[j], paiPairList[i]);
-                            }
-                        }
                     }
-                    else if (paiSctipt1.PaiKind == PaiStatus.PAIKIND.字牌)
+                    // 字牌の場合
+                    else if (paiScript1.PaiKind == PaiStatus.PAIKIND.字牌)
                     {
-                        // 字牌かどうか
-                        if (paiSctipt2.PaiKind == PaiStatus.PAIKIND.字牌)
+                        // 同種牌の場合
+                        if (paiScript2.PaiKind == PaiStatus.PAIKIND.字牌)
                         {
                             // 字牌の順番に入れ替え
-                            switch (paiSctipt1.PaiCharacters)
+                            switch (paiScript1.PaiCharacters)
                             {
                                 case PaiStatus.PAICHARACTERS.東:
                                     // 何もしない
                                     break;
                                 case PaiStatus.PAICHARACTERS.南:
                                     // 東なら入れ替え
-                                    if (paiSctipt2.PaiCharacters == PaiStatus.PAICHARACTERS.東)
+                                    if (paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.東)
                                     {
+                                        // iとjを入れ替え
                                         (paiPairList[i], paiPairList[j]) = (paiPairList[j], paiPairList[i]);
                                     }
                                     break;
                                 case PaiStatus.PAICHARACTERS.西:
                                     // 東南なら入れ替え
-                                    if (paiSctipt2.PaiCharacters == PaiStatus.PAICHARACTERS.東 ||
-                                        paiSctipt2.PaiCharacters == PaiStatus.PAICHARACTERS.南)
+                                    if (paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.東 ||
+                                        paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.南)
                                     {
+                                        // iとjを入れ替え
                                         (paiPairList[i], paiPairList[j]) = (paiPairList[j], paiPairList[i]);
                                     }
                                     break;
                                 case PaiStatus.PAICHARACTERS.北:
                                     // 東南西なら入れ替え
-                                    if (paiSctipt2.PaiCharacters == PaiStatus.PAICHARACTERS.東 ||
-                                        paiSctipt2.PaiCharacters == PaiStatus.PAICHARACTERS.南 ||
-                                        paiSctipt2.PaiCharacters == PaiStatus.PAICHARACTERS.西)
+                                    if (paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.東 ||
+                                        paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.南 ||
+                                        paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.西)
                                     {
+                                        // iとjを入れ替え
                                         (paiPairList[i], paiPairList[j]) = (paiPairList[j], paiPairList[i]);
                                     }
                                     break;
                                 case PaiStatus.PAICHARACTERS.白:
                                     // 東南西北なら入れ替え
-                                    if (paiSctipt2.PaiCharacters == PaiStatus.PAICHARACTERS.東 ||
-                                        paiSctipt2.PaiCharacters == PaiStatus.PAICHARACTERS.南 ||
-                                        paiSctipt2.PaiCharacters == PaiStatus.PAICHARACTERS.西 ||
-                                        paiSctipt2.PaiCharacters == PaiStatus.PAICHARACTERS.北)
+                                    if (paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.東 ||
+                                        paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.南 ||
+                                        paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.西 ||
+                                        paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.北)
                                     {
+                                        // iとjを入れ替え
                                         (paiPairList[i], paiPairList[j]) = (paiPairList[j], paiPairList[i]);
                                     }
                                     break;
                                 case PaiStatus.PAICHARACTERS.發:
                                     // 東南西北白なら入れ替え
-                                    if (paiSctipt2.PaiCharacters == PaiStatus.PAICHARACTERS.東 ||
-                                        paiSctipt2.PaiCharacters == PaiStatus.PAICHARACTERS.南 ||
-                                        paiSctipt2.PaiCharacters == PaiStatus.PAICHARACTERS.西 ||
-                                        paiSctipt2.PaiCharacters == PaiStatus.PAICHARACTERS.北 ||
-                                        paiSctipt2.PaiCharacters == PaiStatus.PAICHARACTERS.白)
+                                    if (paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.東 ||
+                                        paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.南 ||
+                                        paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.西 ||
+                                        paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.北 ||
+                                        paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.白)
                                     {
+                                        // iとjを入れ替え
                                         (paiPairList[i], paiPairList[j]) = (paiPairList[j], paiPairList[i]);
                                     }
                                     break;
@@ -559,9 +675,154 @@ public class PaiOrganizer : MonoBehaviour
         return paiPairList;
     }
 
-    // 全牌を萬子→筒子→索子→字牌の順に並び替える(未実装)
+    // 全牌を萬子→筒子→索子→字牌の順に並び替える
     public List<GameObject> sortPai(List<GameObject> paiGameObjList)
     {
+        for (int i = 0; i < paiGameObjList.Count - 1; i++)
+        {
+            for (int j = i; j < paiGameObjList.Count; j++)
+            {
+                if (i != j)
+                {
+                    /* i番目とj番目を比較し、順番を入れ替える */
+                    // Paiスクリプト取得
+                    Pai paiScript1 = paiGameObjList[i].GetComponent<PaiGO>().Pai;
+                    Pai paiScript2 = paiGameObjList[j].GetComponent<PaiGO>().Pai;
+
+                    // 萬子の場合
+                    if (paiScript1.PaiKind == PaiStatus.PAIKIND.萬子)
+                    {
+                        // 同種牌の場合
+                        if (paiScript2.PaiKind == PaiStatus.PAIKIND.萬子)
+                        {
+                            // 数字を比較
+                            if (paiScript1.PaiNumber > paiScript2.PaiNumber)
+                            {
+                                // iとjを入れ替え
+                                (paiGameObjList[i], paiGameObjList[j]) = (paiGameObjList[j], paiGameObjList[i]);
+                            }
+                        }
+                    }
+                    // 筒子の場合
+                    else if (paiScript1.PaiKind == PaiStatus.PAIKIND.筒子)
+                    {
+                        // 同種牌の場合
+                        if (paiScript2.PaiKind == PaiStatus.PAIKIND.筒子)
+                        {
+                            // 数字を比較
+                            if (paiScript1.PaiNumber > paiScript2.PaiNumber)
+                            {
+                                // iとjを入れ替え
+                                (paiGameObjList[i], paiGameObjList[j]) = (paiGameObjList[j], paiGameObjList[i]);
+                            }
+                        }
+                        // 入れ替える対象の牌(萬子)の場合
+                        else if (paiScript2.PaiKind == PaiStatus.PAIKIND.萬子)
+                        {
+                            // iとjを入れ替え
+                            (paiGameObjList[i], paiGameObjList[j]) = (paiGameObjList[j], paiGameObjList[i]);
+                        }
+                    }
+                    // 索子の場合
+                    else if (paiScript1.PaiKind == PaiStatus.PAIKIND.索子)
+                    {
+                        // 同種牌の場合
+                        if (paiScript2.PaiKind == PaiStatus.PAIKIND.索子)
+                        {
+                            // 数字を比較
+                            if (paiScript1.PaiNumber > paiScript2.PaiNumber)
+                            {
+                                // iとjを入れ替え
+                                (paiGameObjList[i], paiGameObjList[j]) = (paiGameObjList[j], paiGameObjList[i]);
+                            }
+                        }
+                        // 入れ替える対象の牌(萬子・筒子)の場合
+                        else if (paiScript2.PaiKind == PaiStatus.PAIKIND.萬子 ||
+                            paiScript2.PaiKind == PaiStatus.PAIKIND.筒子)
+                        {
+                            // iとjを入れ替え
+                            (paiGameObjList[i], paiGameObjList[j]) = (paiGameObjList[j], paiGameObjList[i]);
+                        }
+                    }
+                    // 字牌の場合
+                    else if (paiScript1.PaiKind == PaiStatus.PAIKIND.字牌)
+                    {
+                        // 同種牌の場合
+                        if (paiScript2.PaiKind == PaiStatus.PAIKIND.字牌)
+                        {
+                            // 字牌の順番に入れ替え
+                            switch (paiScript1.PaiCharacters)
+                            {
+                                case PaiStatus.PAICHARACTERS.東:
+                                    // 何もしない
+                                    break;
+                                case PaiStatus.PAICHARACTERS.南:
+                                    // 東なら入れ替え
+                                    if (paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.東)
+                                    {
+                                        // iとjを入れ替え
+                                        (paiGameObjList[i], paiGameObjList[j]) = (paiGameObjList[j], paiGameObjList[i]);
+                                    }
+                                    break;
+                                case PaiStatus.PAICHARACTERS.西:
+                                    // 東南なら入れ替え
+                                    if (paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.東 ||
+                                        paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.南)
+                                    {
+                                        // iとjを入れ替え
+                                        (paiGameObjList[i], paiGameObjList[j]) = (paiGameObjList[j], paiGameObjList[i]);
+                                    }
+                                    break;
+                                case PaiStatus.PAICHARACTERS.北:
+                                    // 東南西なら入れ替え
+                                    if (paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.東 ||
+                                        paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.南 ||
+                                        paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.西)
+                                    {
+                                        // iとjを入れ替え
+                                        (paiGameObjList[i], paiGameObjList[j]) = (paiGameObjList[j], paiGameObjList[i]);
+                                    }
+                                    break;
+                                case PaiStatus.PAICHARACTERS.白:
+                                    // 東南西北なら入れ替え
+                                    if (paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.東 ||
+                                        paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.南 ||
+                                        paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.西 ||
+                                        paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.北)
+                                    {
+                                        // iとjを入れ替え
+                                        (paiGameObjList[i], paiGameObjList[j]) = (paiGameObjList[j], paiGameObjList[i]);
+                                    }
+                                    break;
+                                case PaiStatus.PAICHARACTERS.發:
+                                    // 東南西北白なら入れ替え
+                                    if (paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.東 ||
+                                        paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.南 ||
+                                        paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.西 ||
+                                        paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.北 ||
+                                        paiScript2.PaiCharacters == PaiStatus.PAICHARACTERS.白)
+                                    {
+                                        // iとjを入れ替え
+                                        (paiGameObjList[i], paiGameObjList[j]) = (paiGameObjList[j], paiGameObjList[i]);
+                                    }
+                                    break;
+                                case PaiStatus.PAICHARACTERS.中:
+                                    // iとjを入れ替え
+                                    (paiGameObjList[i], paiGameObjList[j]) = (paiGameObjList[j], paiGameObjList[i]);
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            // iとjを入れ替え
+                            (paiGameObjList[i], paiGameObjList[j]) = (paiGameObjList[j], paiGameObjList[i]);
+                        }
+                    }
+                }
+            }
+        }
         return paiGameObjList;
     }
 }

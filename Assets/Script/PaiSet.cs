@@ -1,9 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 // 面子オブジェクト
-public class PaiSet : MonoBehaviour
+public class PaiSet
 {
     // 牌1
     private GameObject pai1 = null;
@@ -70,15 +68,59 @@ public class PaiSet : MonoBehaviour
     }
 
     /* セッターゲッター */
-    public GameObject Pai1 { set; get; }
-    public GameObject Pai2 { set; get; }
-    public GameObject Pai3 { set; get; }
-    public GameObject Pai4 { set; get; }
-    public GameObject PaiConcealed { set; get; }
-    public GameObject WinningPai { set; get; }
-    public bool IsMeldedPung { set; get; }
-    public bool IsConcealedPung { set; get; }
-    public bool IsMeldedkong { set; get; }
-    public bool IsConcealedKong { set; get; }
-    public bool IsCalledChow { set; get; }
+    public GameObject Pai1
+    {
+        set { this.pai1 = value; }
+        get { return this.pai1; }
+    }
+    public GameObject Pai2
+    {
+        set { this.pai2 = value; }
+        get { return this.pai2; }
+    }
+    public GameObject Pai3
+    {
+        set { this.pai3 = value; }
+        get { return this.pai3; }
+    }
+    public GameObject Pai4
+    {
+        set { this.pai4 = value; }
+        get { return this.pai4; }
+    }
+    public GameObject PaiConcealed
+    {
+        set { this.paiConcealed = value; }
+        get { return this.paiConcealed; }
+    }
+    public GameObject WinningPai
+    {
+        set { this.winningPai = value; }
+        get { return this.winningPai; }
+    }
+    public bool IsMeldedPung
+    {
+        set { this.isMeldedPung = value; }
+        get { return this.isMeldedPung; }
+    }
+    public bool IsConcealedPung
+    {
+        set { this.isConcealedPung = value; }
+        get { return this.isConcealedPung; }
+    }
+    public bool IsMeldedkong
+    {
+        set { this.isMeldedkong = value; }
+        get { return this.isMeldedkong; }
+    }
+    public bool IsConcealedKong
+    {
+        set { this.isConcealedKong = value; }
+        get { return this.isConcealedKong; }
+    }
+    public bool IsCalledChow
+    {
+        set { this.isCalledChow = value; }
+        get { return this.isCalledChow; }
+    }
 }

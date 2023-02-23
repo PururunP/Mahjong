@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,17 +7,36 @@ using UnityEngine;
 public class PaiAmountManager : MonoBehaviour
 {
     // 牌の量入力UI
-    [SerializeField]
-    private GameObject paiAmountUI = null;
+    // [SerializeField]
+    // private GameObject paiAmountUI = null;
     // 山ゲームオブジェクト
     [SerializeField]
-    private GameObject yamaGameObject = null;
-    // 牌ゲームオブジェクトリスト
+    private GameObject yamaGameObject;
+    // 牌ゲームオブジェクトリストオブジェクト
     [SerializeField]
+    private GameObject paiGameObjectListObject;
+    // 牌ゲームオブジェクトリスト
     private List<GameObject> paiGameObjectList;
 
     // 牌の量オブジェクト
-    private PaiAmountStatus paiAmountStatus;
+    private PaiAmountStatus paiAmountStatus = null;
+
+    void Awake()
+    {
+        /* 初期化 */
+        this.paiGameObjectList = new List<GameObject>();
+
+        // 牌ゲームオブジェクトリストオブジェクトから牌ゲームオブジェクトリストを作成
+        // 子オブジェクト取得
+        Transform yamaChild = this.paiGameObjectListObject.
+            GetComponentInChildren<Transform>();
+
+        // メンバにセット
+        foreach (Transform t in yamaChild)
+        {
+            this.paiGameObjectList.Add(t.gameObject);
+        }
+    }
 
     // 牌の数を初期化して取得する
     public void getPaiAmount()
@@ -39,9 +59,12 @@ public class PaiAmountManager : MonoBehaviour
     public void setPaiAmount()
     {
         // 山ゲームオブジェクトの子オブジェクトを削除
-        foreach (Transform t in this.yamaGameObject.transform)
+        if (this.yamaGameObject.transform.childCount <= 0)
         {
-            GameObject.Destroy(t.gameObject);
+            foreach (Transform t in this.yamaGameObject.transform)
+            {
+                GameObject.Destroy(t.gameObject);
+            }
         }
 
         // 牌の量オブジェクトがnullだったら新規生成
@@ -55,7 +78,7 @@ public class PaiAmountManager : MonoBehaviour
         foreach (GameObject paiGameObject in this.paiGameObjectList)
         {
             // 牌スクリプト取得
-            Pai paiScript = paiGameObject.GetComponent<Pai>();
+            Pai paiScript = paiGameObject.GetComponent<PaiGO>().Pai;
 
             // 牌の種類を判別
             if (paiScript.PaiKind == PaiStatus.PAIKIND.字牌)
@@ -217,14 +240,28 @@ public class PaiAmountManager : MonoBehaviour
                 }
             }
         }
+        // 山オブジェクトのメンバ変数に牌ゲームオブジェクトをセット
+        Yama yama = this.yamaGameObject.GetComponent<Yama>();
+        yama.setPaiGameObjectToMemberVariable();
     }
 
     // 山の子に引数の牌ゲームオブジェクトを引数の個数生成
     public void setPaiOnYama(GameObject paiGameObject, int amount)
     {
-        // 牌ゲームオブジェクトを複製
-        GameObject obj = Instantiate(paiGameObject, Vector3.zero, Quaternion.identity);
-        // 複製した牌ゲームオブジェクトを山の子にセット
-        obj.transform.SetParent(this.yamaGameObject.transform);
+        // 複製する牌オブジェクトの名前取得
+        string paiObjName = paiGameObject.name;
+
+        for (int i = 0; i < amount; i++)
+        {
+            // 牌ゲームオブジェクトの初期座標取得
+            Vector3 initVec = paiGameObject.GetComponent<PaiGO>().InitVec;
+            // 牌ゲームオブジェクトを複製
+            GameObject obj = Instantiate(paiGameObject, initVec,
+                Quaternion.Euler(90f, 0f, 0f));
+            // 複製した牌ゲームオブジェクトの名前を「牌名i+1」にする
+            obj.name = paiObjName + (i + 1);
+            // 複製した牌ゲームオブジェクトを山の子にセット
+            obj.transform.SetParent(this.yamaGameObject.transform);
+        }
     }
 }
