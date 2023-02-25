@@ -22,6 +22,7 @@ public class PaiCal
         }
         // 頭が役牌かどうか
         bool isValueTiles = false;
+
         // 頭のPaiスクリプトを取得
         Pai pai = paiPair.Pai1.GetComponent<PaiGO>().Pai;
         if (pai.PaiCharacters == ownWindPaiCharacters ||
@@ -37,6 +38,7 @@ public class PaiCal
         if (isConcealedRon)
         {
             points += 10;
+            Debug.Log("門前ロン");
         }
         // ツモ和了は符+2
         // 平和ツモはスルー(20符の場合)
@@ -45,9 +47,9 @@ public class PaiCal
             points += 2;
         }
 
-        // 切り上げ処理
-        double d = points / 10;
-        points = (int)Math.Ceiling(d) * 10;
+        // 符切り上げ処理
+        double d = ((double)points) / 10;
+        points = ((int)Math.Ceiling(d)) * 10;
 
         return points;
     }
@@ -58,8 +60,8 @@ public class PaiCal
         // 符宣言
         int points = 0;
 
-        // 牌を1つ取得
-        Pai pai = paiSet.Pai1.GetComponent<PaiGO>().Pai;
+        // 牌を1つ取得(間の牌なら么九牌の見分けがつけやすい※ソート必須)
+        Pai pai = paiSet.Pai2.GetComponent<PaiGO>().Pai;
 
         /* 么九牌かどうかを判定 */
         // フラグ宣言
@@ -80,44 +82,44 @@ public class PaiCal
         // 明刻かどうか
         if (paiSet.IsConcealedPung)
         {
-            points = 2;
+            points += 2;
             // 么九牌なら符を2倍に
             if (isTerminalsAndHonors)
             {
-                points += points * 2;
+                points += 2;
             }
         }
 
         // 暗刻かどうか 
-        else if (paiSet.IsConcealedPung)
+        else if (paiSet.IsMeldedPung)
         {
-            points = 4;
+            points += 4;
             // 么九牌なら符を2倍に
             if (isTerminalsAndHonors)
             {
-                points += points * 2;
+                points += 4;
             }
         }
 
         // 明槓かどうか
-        else if (paiSet.IsConcealedPung)
+        else if (paiSet.IsConcealedKong)
         {
-            points = 8;
+            points += 8;
             // 么九牌なら符を2倍に
             if (isTerminalsAndHonors)
             {
-                points += points * 2;
+                points += 8;
             }
         }
 
         // 暗槓かどうか
-        else if (paiSet.IsConcealedPung)
+        else if (paiSet.IsMeldedkong)
         {
-            points = 16;
+            points += 16;
             // 么九牌なら符を2倍に
             if (isTerminalsAndHonors)
             {
-                points += points * 2;
+                points += 16;
             }
         }
 
@@ -202,7 +204,7 @@ public class PaiCal
         return points;
     }
 
-    // 点数計算
+    // 点数計算 // TODO もっと上の符の数値を入力
     public static MahjongScoreStatus calScore(int points, int doubles)
     {
         // 翻数で分岐処理

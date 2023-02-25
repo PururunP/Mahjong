@@ -62,7 +62,6 @@ public class Yama : MonoBehaviour
                         {
                             // すべて一致するなら山から除外してゲームオブジェクトを返却
                             this.pais.Remove(paiGameObj);
-                            //Debug.Log("残り牌：" + this.pais.Count);
                             return paiGameObj;
                         }
                     }

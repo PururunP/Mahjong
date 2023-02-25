@@ -25,10 +25,10 @@ public class PaiQ : MonoBehaviour
     // ロン親テキスト
     [SerializeField]
     private Text textOyaTumo;
-    // ロン親テキスト
-    [SerializeField]
-    private Text textTumoOrRon;
 
+    // ツモロンドロップダウン
+    [SerializeField]
+    private Dropdown drdTumoOrRon;
     // 自風ドロップダウン
     [SerializeField]
     private Dropdown drdOwnWind;
@@ -81,7 +81,8 @@ public class PaiQ : MonoBehaviour
         this.paiPair = new PaiPair();
         this.paiPair7List = new List<PaiPair>();
 
-        string log = "";
+        // 手牌の初期座標
+        float initXPai = -5.0f, initYPai = 0.0f, initZPai = 0.0f;
 
         // 1/10で七対子化 // TODO 基本形テスト中
         if (false && this.random.Next(0, 10) == 0)
@@ -129,25 +130,10 @@ public class PaiQ : MonoBehaviour
                 count++;
             }
 
-            Debug.Log(this.paiOrganizer.log);
-            this.paiOrganizer.log = "";
-
             /* 和了牌を決定 */
             // 対子からランダムに決定
             int randNumber = this.random.Next(0, this.paiPair7List.Count);
             this.paiPair7List[randNumber].WinningPai = this.paiPair7List[randNumber].Pai1;
-
-            // ツモかロンかを1/2で決定 
-            if (this.random.Next(0, 2) == 0)
-            {
-                this.isSelfDrawWin = true;
-                this.isConcealedRon = false;
-            }
-            else
-            {
-                this.isSelfDrawWin = false;
-                this.isConcealedRon = true;
-            }
 
             // 和了牌を含む対子とそれ以外に分ける
             List<PaiPair> paiPairList = new List<PaiPair>();
@@ -170,10 +156,7 @@ public class PaiQ : MonoBehaviour
             // 牌を整理
             paiPairList = this.paiOrganizer.sortPaiPair(paiPairList);
 
-            // 座標にオブジェクトを設定
-            // 手牌の初期座標
-            float initXPai = -4.0f, initYPai = 0.0f, initZPai = 0.0f;
-
+            /* 座標にオブジェクトを設定 */
             // 手牌の座標を決定
             for (int i = 0; i < paiPairList.Count; i++)
             {
@@ -185,7 +168,6 @@ public class PaiQ : MonoBehaviour
                 initXPai += 0.6f;
 
             }
-
             // 待ち牌の座標を決定
             winPaiPair.Pai1.transform.localPosition = new Vector3(initXPai, initYPai, initZPai);
 
@@ -205,61 +187,44 @@ public class PaiQ : MonoBehaviour
             this.paiPair = this.paiOrganizer.alignPaiPair();
 
             /* 和了牌を決定 */
-            // 1/3で分岐処理
-            if (this.random.Next(0, 3) != 0)
-            {
-                // 面子から決定
-                // 乱数で0-3を取得し、どの面子かを決める
-                int randPaiSet = this.random.Next(0, 4);
-                // 乱数で0-2を取得し、どの牌を和了牌にするか決める
-                int randPai = this.random.Next(0, 3);
+            // 和了牌が決まったかをフラグで管理
+            bool isDecision = false;
 
-                // 和了牌を取得(槓子は全部同じ牌なので考慮しない)
-                if (randPai == 0)
+            // 全面子を順に副露されているかを確認
+            // 副露されていなかったら1/3の確率でその面子を和了牌セットにする
+            foreach (PaiSet paiSet in this.paiSetList)
+            {
+                if (!(paiSet.IsConcealedPung || paiSet.IsMeldedkong ||
+                    paiSet.IsConcealedKong || paiSet.IsCalledChow)
+                    && this.random.Next(0, 3) == 0)
                 {
-                    this.paiSetList[randPaiSet].WinningPai =
-                        this.paiSetList[randPaiSet].Pai1;
-                }
-                else if (randPai == 1)
-                {
-                    this.paiSetList[randPaiSet].WinningPai =
-                        this.paiSetList[randPaiSet].Pai2;
-                }
-                else
-                {
-                    this.paiSetList[randPaiSet].WinningPai =
-                        this.paiSetList[randPaiSet].Pai3;
+                    // 乱数で0-2を取得し、どの牌を和了牌にするか決める
+                    int randPai = this.random.Next(0, 3);
+
+                    // 和了牌を取得(槓子は全部同じ牌なので考慮しない)
+                    if (randPai == 0)
+                    {
+                        paiSet.WinningPai = paiSet.Pai1;
+                    }
+                    else if (randPai == 1)
+                    {
+                        paiSet.WinningPai = paiSet.Pai2;
+                    }
+                    else
+                    {
+                        paiSet.WinningPai = paiSet.Pai3;
+                    }
+                    isDecision = true;
+                    break;
                 }
             }
-            else
+            // 面子で和了牌が決まらなかったら対子から和了牌を決める
+            if (!isDecision)
             {
                 // 頭から対子の片方の牌に決定
                 this.paiPair.WinningPai = this.paiPair.Pai1;
             }
 
-            // ツモかロンかを1/2で決定 
-            if (this.random.Next(0, 2) == 0)
-            {
-                this.isSelfDrawWin = true;
-                this.isConcealedRon = false;
-            }
-            else
-            {
-                this.isSelfDrawWin = false;
-                this.isConcealedRon = true;
-
-                // 門前かどうかをチェック
-                foreach (PaiSet paiSet in this.paiSetList)
-                {
-                    if (paiSet.IsConcealedPung ||
-                        paiSet.IsConcealedKong ||
-                        paiSet.IsCalledChow)
-                    {
-                        // 鳴いていたら門前ロンフラグをfalse
-                        this.isConcealedRon = false;
-                    }
-                }
-            }
             // 鳴き牌と和了牌とそれ以外に分ける
             List<PaiSet> paiSetList = new List<PaiSet>();
             List<PaiSet> paiSetConcealedList = new List<PaiSet>();
@@ -272,8 +237,7 @@ public class PaiQ : MonoBehaviour
                 if (paiSet.WinningPai == null)
                 {
                     /* 暗槓明槓明刻鳴き順子チェック */
-                    // 暗槓
-                    if (paiSet.IsMeldedPung || paiSet.IsConcealedPung ||
+                    if (paiSet.IsConcealedPung || paiSet.IsMeldedkong ||
                         paiSet.IsConcealedKong || paiSet.IsCalledChow)
                     {
                         // 鳴き牌に追加
@@ -300,10 +264,6 @@ public class PaiQ : MonoBehaviour
             // 牌を整理
             paiSetList = this.paiOrganizer.sortPaiSet(paiSetList);
 
-            // 座標にオブジェクトを設定
-            // 手牌の初期座標
-            float initXPai = -4.0f, initYPai = 0.0f, initZPai = 0.0f;
-
             // 手牌の座標を決定
             for (int i = 0; i < paiSetList.Count; i++)
             {
@@ -316,113 +276,156 @@ public class PaiQ : MonoBehaviour
 
                 paiSetList[i].Pai3.transform.position = new Vector3(initXPai, initYPai, initZPai);
                 initXPai += 0.6f;
-
-                log += paiSetList[i].Pai1.name + " : " + paiSetList[i].Pai1.transform.position + "\n";
-                log += paiSetList[i].Pai2.name + " : " + paiSetList[i].Pai2.transform.position + "\n";
-                log += paiSetList[i].Pai3.name + " : " + paiSetList[i].Pai3.transform.position + "\n";
             }
             // 頭牌の座標を決定
             // 牌2つの座標を設定し、X軸を増加
-            // 和了牌セットで和了牌の場合はスルー
-            if (paiPair.WinningPai != paiPair.Pai1)
+            // 和了牌セットの場合はスルー
+            if (winPaiPair == null)
             {
                 paiPair.Pai1.transform.position = new Vector3(initXPai, initYPai, initZPai);
                 initXPai += 0.6f;
-                log += paiPair.Pai1.name + " : " + paiPair.Pai1.transform.position + "\n";
-            }
-            if (paiPair.WinningPai != paiPair.Pai2)
-            {
                 paiPair.Pai2.transform.position = new Vector3(initXPai, initYPai, initZPai);
                 initXPai += 0.6f;
-                log += paiPair.Pai2.name + " : " + paiPair.Pai2.transform.position + "\n";
             }
 
-            // 和了牌との間を増やす
-            initXPai += 1.0f;
-
-            // 和了牌の座標を決定 // TODO こっちは分岐処理した方がいい
+            // 和了牌の座標を決定
             if (winPaiSet != null)
             {
+                // 和了牌とそうでない牌を判別(和了牌に槓子は含まれないので4牌目は考慮しない)
+                if (winPaiSet.WinningPai != winPaiSet.Pai1)
+                {
+                    // 待ち牌の座標を決定
+                    winPaiSet.Pai1.transform.localPosition = new Vector3(initXPai, initYPai, initZPai);
+                    initXPai += 0.6f;
+                }
+                if (winPaiSet.WinningPai != winPaiSet.Pai2)
+                {
+                    // 待ち牌の座標を決定
+                    winPaiSet.Pai2.transform.localPosition = new Vector3(initXPai, initYPai, initZPai); ;
+                    initXPai += 0.6f;
+                }
+                if (winPaiSet.WinningPai != winPaiSet.Pai3)
+                {
+                    // 待ち牌の座標を決定
+                    winPaiSet.Pai3.transform.localPosition = new Vector3(initXPai, initYPai, initZPai); ;
+                    initXPai += 0.6f;
+                }
+                // 和了牌との間を増やす
+                initXPai += 0.4f;
+
+                // 和了牌の座標を決定
                 winPaiSet.WinningPai.transform.position = new Vector3(initXPai, initYPai, initZPai);
             }
             else if (winPaiPair != null)
             {
-                winPaiPair.WinningPai.transform.position = new Vector3(initXPai, initYPai, initZPai);
+                // 待ち牌の座標を決定
+                winPaiPair.Pai1.transform.localPosition = new Vector3(initXPai, initYPai, initZPai);
+
+                // 和了牌との間を増やす
+                initXPai += 1.0f;
+
+                // 和了牌の座標を決定
+                winPaiPair.Pai2.transform.localPosition = new Vector3(initXPai, initYPai, initZPai);
             }
 
             // 鳴き牌の初期座標
-            initXPai = 8.0f;
+            initXPai = 5.0f;
             initYPai = 0.0f;
             initZPai = 0.0f;
 
-            // 鳴き牌を決定 // TODO 暗槓はひっくり返す // TODO 鳴き牌を横にする
+            // 鳴き牌を決定
             foreach (PaiSet paiSet in paiSetConcealedList)
             {
                 // 牌4つの座標を設定し、Z軸を増加
-                // 鳴き牌なら横にする
-                if (paiSet.Pai1 == paiSet.PaiConcealed)
+                // 暗槓かどうか
+                if (paiSet.IsMeldedkong)
                 {
-                    // 横にする
-                    paiSet.Pai1.transform.rotation = Quaternion.Euler(90.0f, 0.0f, 90.0f);
-
-                    paiSet.Pai1.transform.position = new Vector3(initXPai, initYPai, initZPai);
-                    initXPai -= 1.0f;
-                }
-                else
-                {
+                    // 端牌なのでひっくり返す
+                    paiSet.Pai1.transform.rotation = Quaternion.Euler(270.0f, 0.0f, 0.0f);
                     paiSet.Pai1.transform.position = new Vector3(initXPai, initYPai, initZPai);
                     initXPai -= 0.6f;
-                }
 
-                if (paiSet.Pai2 == paiSet.PaiConcealed)
-                {
-                    // 横にする
-                    paiSet.Pai2.transform.rotation = Quaternion.Euler(90.0f, 0.0f, 90.0f);
-
+                    paiSet.Pai2.transform.rotation = Quaternion.Euler(90.0f, 0.0f, 0.0f);
                     paiSet.Pai2.transform.position = new Vector3(initXPai, initYPai, initZPai);
-                    initXPai -= 1.0f;
+                    initXPai -= 0.6f;
+
+                    paiSet.Pai3.transform.rotation = Quaternion.Euler(90.0f, 0.0f, 0.0f);
+                    paiSet.Pai3.transform.position = new Vector3(initXPai, initYPai, initZPai);
+                    initXPai -= 0.6f;
+
+                    // 端牌なのでひっくり返す
+                    paiSet.Pai4.transform.rotation = Quaternion.Euler(270.0f, 0.0f, 0.0f);
+                    paiSet.Pai4.transform.position = new Vector3(initXPai, initYPai, initZPai);
                 }
                 else
                 {
-                    paiSet.Pai2.transform.position = new Vector3(initXPai, initYPai, initZPai);
-                    initXPai -= 0.6f;
-                }
+                    // 鳴き牌なら横にする
+                    if (paiSet.Pai1 == paiSet.PaiConcealed)
+                    {
+                        // 横にする
+                        paiSet.Pai1.transform.rotation = Quaternion.Euler(90.0f, 0.0f, 90.0f);
 
-                if (paiSet.Pai3 == paiSet.PaiConcealed)
-                {
-                    // 横にする
-                    paiSet.Pai3.transform.rotation = Quaternion.Euler(90.0f, 0.0f, 90.0f);
+                        paiSet.Pai1.transform.position = new Vector3(initXPai, initYPai, initZPai - 0.1f);
+                        initXPai -= 0.7f;
+                    }
+                    else
+                    {
+                        paiSet.Pai1.transform.position = new Vector3(initXPai, initYPai, initZPai);
+                        initXPai -= 0.6f;
+                    }
 
-                    paiSet.Pai3.transform.position = new Vector3(initXPai, initYPai, initZPai);
-                    initXPai -= 1.0f;
-                }
-                else
-                {
-                    paiSet.Pai3.transform.position = new Vector3(initXPai, initYPai, initZPai);
-                    initXPai -= 0.6f;
-                }
+                    if (paiSet.Pai2 == paiSet.PaiConcealed)
+                    {
+                        // 横にする
+                        paiSet.Pai2.transform.rotation = Quaternion.Euler(90.0f, 0.0f, 90.0f);
 
-                if (paiSet.Pai4 != null && paiSet.Pai4 == paiSet.PaiConcealed)
-                {
-                    // 横にする
-                    paiSet.Pai4.transform.rotation = Quaternion.Euler(90.0f, 0.0f, 90.0f);
+                        // 横にする分横にずらす
+                        initXPai -= 0.1f;
+                        paiSet.Pai2.transform.position = new Vector3(initXPai, initYPai, initZPai - 0.1f);
+                        initXPai -= 0.7f;
+                    }
+                    else
+                    {
+                        paiSet.Pai2.transform.position = new Vector3(initXPai, initYPai, initZPai);
+                        initXPai -= 0.6f;
+                    }
 
-                    paiSet.Pai4.transform.position = new Vector3(initXPai, initYPai, initZPai);
+                    if (paiSet.Pai3 == paiSet.PaiConcealed)
+                    {
+                        // 横にする
+                        paiSet.Pai3.transform.rotation = Quaternion.Euler(90.0f, 0.0f, 90.0f);
+
+                        // 横にする分横にずらす
+                        initXPai -= 0.1f;
+                        paiSet.Pai3.transform.position = new Vector3(initXPai, initYPai, initZPai - 0.1f);
+                        initXPai -= 0.7f;
+                    }
+                    else
+                    {
+                        paiSet.Pai3.transform.position = new Vector3(initXPai, initYPai, initZPai);
+                        initXPai -= 0.6f;
+                    }
+
+                    if (paiSet.Pai4 != null && paiSet.Pai4 == paiSet.PaiConcealed)
+                    {
+                        // 横にする
+                        paiSet.Pai4.transform.rotation = Quaternion.Euler(90.0f, 0.0f, 90.0f);
+
+                        // 横にする分横にずらす
+                        initXPai -= 0.1f;
+                        paiSet.Pai4.transform.position = new Vector3(initXPai, initYPai, initZPai - 0.1f);
+                    }
+                    else if (paiSet.Pai4 != null)
+                    {
+                        paiSet.Pai4.transform.position = new Vector3(initXPai, initYPai, initZPai);
+                    }
                 }
-                else if (paiSet.Pai4 != null)
-                {
-                    paiSet.Pai4.transform.position = new Vector3(initXPai, initYPai, initZPai);
-                }
-                log += paiSet.Pai1.name + " : " + paiSet.Pai1.transform.position + "\n";
-                log += paiSet.Pai2.name + " : " + paiSet.Pai2.transform.position + "\n";
-                log += paiSet.Pai3.name + " : " + paiSet.Pai3.transform.position + "\n";
                 // X軸を鳴き牌の初期座標にリセット
-                initXPai = 8.0f;
+                initXPai = 5.0f;
                 // Z軸を上に変更
-                initZPai -= 1.0f;
+                initZPai += 1.0f;
             }
         }
-        //Debug.Log(log);
         // 点数計算を実施
         doPaiCal();
     }
@@ -434,6 +437,39 @@ public class PaiQ : MonoBehaviour
         int point = 0;
         int doubles = 0;
         MahjongScoreStatus mahjongScoreStatus = new MahjongScoreStatus();
+
+        // ツモロンを取得
+        string tumoOrRon = this.drdTumoOrRon.options[this.drdTumoOrRon.value].text;
+
+        // ツモロンフラグをセット
+        // ロンの場合、門前かどうかをチェック
+        if (tumoOrRon.Equals("ロン"))
+        {
+            this.isSelfDrawWin = false;
+            this.isConcealedRon = true;
+
+            // 基本型かどうか
+            if (this.paiSetList.Count != 0)
+            {
+                // 門前かどうかをチェック
+                foreach (PaiSet paiSet in this.paiSetList)
+                {
+                    if (paiSet.IsConcealedPung ||
+                        paiSet.IsConcealedKong ||
+                        paiSet.IsCalledChow)
+                    {
+                        // 鳴いていたら門前ロンフラグをfalse
+                        this.isConcealedRon = false;
+                        break;
+                    }
+                }
+            }
+        }
+        else
+        {
+            this.isSelfDrawWin = true;
+            this.isConcealedRon = false;
+        }
 
         // 七対子か基本形か判別
         if (this.paiPair7List.Count == 7)
@@ -510,21 +546,11 @@ public class PaiQ : MonoBehaviour
         {
             koTumoChild = "" + mahjongScoreStatus.KoTumoChild;
             koTumoParent = "" + mahjongScoreStatus.KoTumoParent;
-            this.textOyaTumo.text = "親ツモ：" + mahjongScoreStatus.KoTumoParent;
+            this.textOyaTumo.text = "親ツモ：" + mahjongScoreStatus.KoTumoParent + "オール";
         }
         this.textKoRon.text = "子ロン：" + koRon;
         this.textOyaRon.text = "親ロン：" + oyaRon;
         this.textKoTumo.text = "子ツモ：" + koTumoChild + "-" + koTumoParent;
-
-        // ツモ和了か
-        if (this.isSelfDrawWin)
-        {
-            this.textTumoOrRon.text = "和了：ツモ";
-        }
-        else
-        {
-            this.textTumoOrRon.text = "和了：ロン";
-        }
     }
 
     // 答え表示

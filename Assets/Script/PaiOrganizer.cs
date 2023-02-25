@@ -12,9 +12,6 @@ public class PaiOrganizer : MonoBehaviour
     // 乱数
     private System.Random random;
 
-    // ログ出力用文字列
-    public string log = "";
-
     void Awake()
     {
         /* 初期化 */
@@ -35,21 +32,16 @@ public class PaiOrganizer : MonoBehaviour
             // Paiスクリプト抽出
             Pai paiScript = randPai.GetComponent<PaiGO>().Pai;
 
-            log += "面子ランダムツモ：" + randPai.name + "\n"; ;
-
-            /* 牌の種類により分岐処理 */
-            // 字牌かどうか
-            if (paiScript.PaiKind == PaiStatus.PAIKIND.字牌)
+            // 字牌もしくは1/2の確率で分岐処理
+            if (paiScript.PaiKind == PaiStatus.PAIKIND.字牌 || this.random.Next(0, 2) == 0)
             {
-                // 同じ牌をツモ
-                Pai pai = new Pai(paiScript.PaiKind, paiScript.PaiCharacters);
+                /* 刻子・槓子を構成 */
+                // 同じ牌をツモ(赤牌はスルー)
+                Pai pai = new Pai(paiScript.PaiKind, paiScript.PaiCharacters, paiScript.PaiNumber, false);
 
                 GameObject paiGameObj1 = yamaScript.drawPai(pai);
                 GameObject paiGameObj2 = yamaScript.drawPai(pai);
                 GameObject paiGameObj3 = yamaScript.drawPai(pai);
-                log += "ツモ1：" + paiGameObj1.name + "\n";
-                log += "ツモ2：" + paiGameObj2.name + "\n";
-                log += "ツモ3：" + paiGameObj3.name + "\n";
 
                 // nullチェック
                 if (paiGameObj1 == null || paiGameObj2 == null)
@@ -109,142 +101,62 @@ public class PaiOrganizer : MonoBehaviour
             }
             else
             {
-                // 1/2で分岐処理
-                if (this.random.Next(0, 2) == 0)
+                /* 順子を構成 */
+                // 么九牌の場合は2,3もしくは8,7の同種牌をツモ
+                // それ以外はn-1,n+1の同種牌をツモ(赤牌はスルー)
+                Pai pai1, pai2;
+                if (paiScript.PaiNumber == 1)
                 {
-                    /* 順子を構成 */
-                    // 么九牌の場合は2,3もしくは8,7の同種牌をツモ
-                    // それ以外はn-1,n+1の同種牌をツモ
-                    Pai pai1, pai2;
-                    if (paiScript.PaiNumber == 1)
-                    {
-                        pai1 = new Pai(paiScript.PaiKind, 2, false);
-                        pai2 = new Pai(paiScript.PaiKind, 3, false);
-                    }
-                    else if (paiScript.PaiNumber == 9)
-                    {
-                        pai1 = new Pai(paiScript.PaiKind, 8, false);
-                        pai2 = new Pai(paiScript.PaiKind, 7, false);
-                    }
-                    else
-                    {
-                        // 数値が5の場合、赤くするかを分岐処理で決定
-                        // 1/4の確率で赤くする
-                        bool isRed1 = false;
-                        bool isRed2 = false;
-                        if ((paiScript.PaiNumber - 1) == 5 && this.random.Next(0, 4) == 9)
-                        {
-                            isRed1 = true;
-                        }
-                        if ((paiScript.PaiNumber + 1) == 5 && this.random.Next(0, 4) == 0)
-                        {
-                            isRed2 = true;
-                        }
-                        pai1 = new Pai(paiScript.PaiKind, paiScript.PaiNumber - 1, isRed1);
-                        pai2 = new Pai(paiScript.PaiKind, paiScript.PaiNumber + 1, isRed2);
-                    }
-
-                    GameObject paiGameObj1 = yamaScript.drawPai(pai1);
-                    GameObject paiGameObj2 = yamaScript.drawPai(pai2);
-                    log += "ツモ1：" + paiGameObj1.name + "\n";
-                    log += "ツモ2：" + paiGameObj2.name + "\n";
-
-                    // nullチェック
-                    if (paiGameObj1 == null || paiGameObj2 == null)
-                    {
-                        // ツモった牌を山に戻す
-                        yamaScript.addPai(randPai);
-                        yamaScript.addPai(paiGameObj1);
-                        yamaScript.addPai(paiGameObj2);
-                        continue;
-                    }
-                    else
-                    {
-                        // 1/2で分岐処理
-                        if (this.random.Next(0, 2) == 0)
-                        {
-                            // チーした順子として面子オブジェクト返却
-                            return new PaiSet(pai1: randPai, pai2: paiGameObj1,
-                                pai3: paiGameObj2, paiConcealed: randPai,
-                                isCalledChow: true);
-                        }
-                        else
-                        {
-                            // 鳴きなしの順子として面子オブジェクト返却
-                            return new PaiSet(pai1: randPai, pai2: paiGameObj1,
-                                pai3: paiGameObj2, paiConcealed: null,
-                                isCalledChow: false);
-                        }
-                    }
+                    pai1 = new Pai(paiScript.PaiKind, 2, false);
+                    pai2 = new Pai(paiScript.PaiKind, 3, false);
+                }
+                else if (paiScript.PaiNumber == 9)
+                {
+                    pai1 = new Pai(paiScript.PaiKind, 8, false);
+                    pai2 = new Pai(paiScript.PaiKind, 7, false);
                 }
                 else
                 {
-                    /* 刻子か槓子を構成 */
-                    // 同数字の同種牌をツモ
-                    Pai pai = new Pai(paiScript.PaiKind, paiScript.PaiNumber, false);
+                    pai1 = new Pai(paiScript.PaiKind, paiScript.PaiNumber - 1, false);
+                    pai2 = new Pai(paiScript.PaiKind, paiScript.PaiNumber + 1, false);
+                }
 
-                    GameObject paiGameObj1 = yamaScript.drawPai(pai);
-                    GameObject paiGameObj2 = yamaScript.drawPai(pai);
-                    GameObject paiGameObj3 = yamaScript.drawPai(pai);
-                    log += "ツモ1：" + paiGameObj1.name + "\n";
-                    log += "ツモ2：" + paiGameObj2.name + "\n";
-                    log += "ツモ3：" + paiGameObj3.name + "\n";
+                GameObject paiGameObj1 = yamaScript.drawPai(pai1);
+                GameObject paiGameObj2 = yamaScript.drawPai(pai2);
 
-                    // nullチェック
-                    if (paiGameObj1 == null || paiGameObj2 == null)
+                // nullチェック
+                if (paiGameObj1 == null || paiGameObj2 == null)
+                {
+                    // ツモった牌を山に戻す
+                    yamaScript.addPai(randPai);
+                    yamaScript.addPai(paiGameObj1);
+                    yamaScript.addPai(paiGameObj2);
+                    continue;
+                }
+                else
+                {
+                    // 順子をリストに入れる
+                    List<GameObject> paiSetObjList = new List<GameObject>(){
+                        randPai,paiGameObj1,paiGameObj2
+                    };
+
+                    // 牌をソート
+                    paiSetObjList = sortPai(paiSetObjList);
+
+                    // 1/2で分岐処理
+                    if (this.random.Next(0, 2) == 0)
                     {
-                        // ツモった牌を山に戻す
-                        yamaScript.addPai(randPai);
-                        yamaScript.addPai(paiGameObj1);
-                        yamaScript.addPai(paiGameObj2);
-                        yamaScript.addPai(paiGameObj3);
-                        continue;
+                        // チーした順子として面子オブジェクト返却
+                        return new PaiSet(pai1: paiSetObjList[0], pai2: paiSetObjList[1],
+                            pai3: paiSetObjList[2], paiConcealed: randPai,
+                            isCalledChow: true);
                     }
                     else
                     {
-                        // 槓子ができる(4牌目がある)かつ1/2の確率で分岐処理
-                        if (paiGameObj3 != null && this.random.Next(0, 2) == 0)
-                        {
-                            // 槓子として処理
-                            // 1/2で分岐処理
-                            if (this.random.Next(0, 2) == 0)
-                            {
-                                // 暗槓として面子オブジェクト返却
-                                return new PaiSet(pai1: randPai, pai2: paiGameObj1,
-                                    pai3: paiGameObj2, pai4: paiGameObj3, paiConcealed: randPai,
-                                    isMeldedkong: true, isConcealedKong: false);
-                            }
-                            else
-                            {
-                                // 明槓として面子オブジェクト返却
-                                return new PaiSet(pai1: randPai, pai2: paiGameObj1,
-                                    pai3: paiGameObj2, pai4: paiGameObj3, paiConcealed: randPai,
-                                    isMeldedkong: false, isConcealedKong: true);
-                            }
-
-                        }
-                        else
-                        {
-                            // 刻子として処理
-                            // 4牌目を山に戻す
-                            yamaScript.addPai(paiGameObj3);
-
-                            // 1/2で分岐処理
-                            if (this.random.Next(0, 2) == 0)
-                            {
-                                // 暗刻として面子オブジェクト返却
-                                return new PaiSet(pai1: randPai, pai2: paiGameObj1,
-                                    pai3: paiGameObj2, paiConcealed: randPai,
-                                    isMeldedPung: true, isConcealedPung: false);
-                            }
-                            else
-                            {
-                                // 明刻として面子オブジェクト返却
-                                return new PaiSet(pai1: randPai, pai2: paiGameObj1,
-                                    pai3: paiGameObj2, paiConcealed: randPai,
-                                    isMeldedPung: false, isConcealedPung: true);
-                            }
-                        }
+                        // 鳴きなしの順子として面子オブジェクト返却
+                        return new PaiSet(pai1: paiSetObjList[0], pai2: paiSetObjList[1],
+                            pai3: paiSetObjList[2], paiConcealed: null,
+                            isCalledChow: false);
                     }
                 }
             }
@@ -265,7 +177,6 @@ public class PaiOrganizer : MonoBehaviour
             // Paiスクリプト抽出
             Pai paiScript = randPai.GetComponent<PaiGO>().Pai;
 
-            log += "対子ランダムツモ：" + randPai.name + "\n";
 
             // 同牌をツモ(赤牌は普通の牌に)
             Pai pai = new Pai(paiScript.PaiKind, paiScript.PaiCharacters,
@@ -282,7 +193,6 @@ public class PaiOrganizer : MonoBehaviour
             }
             else
             {
-                log += "ツモ：" + paiGameObj.name + "\n";
                 // 対子オブジェクト返却
                 return new PaiPair(pai1: randPai, pai2: paiGameObj);
             }
